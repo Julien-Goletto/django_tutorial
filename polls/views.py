@@ -4,6 +4,7 @@ from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from .models import Question, Choice
 from django.template import loader
+from django.utils import timezone
 
 # Using F to avoid race conditions
 from django.db.models import F
@@ -16,7 +17,7 @@ class IndexView(generic.ListView):
 
     def get_queryset(self):
         # Return the last five published questions.
-        return Question.objects.order_by("-pub_date")[:5]
+        return Question.objects.filter(pub_date__lte=timezone.now()).order_by("-pub_date")[:5]
 
 class DetailView(generic.DetailView):
     model = Question
