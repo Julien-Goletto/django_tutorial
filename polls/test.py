@@ -5,6 +5,7 @@ from django.urls import reverse
 
 from .models import Question
 
+# Unit tests
 class QuestionModelTests(TestCase):
     def test_was_published_recently_with_old_question(self):
         # was_published_recently() returns False for questions whose pub_date is older than 1 day
@@ -24,6 +25,7 @@ class QuestionModelTests(TestCase):
         recent_question = Question(pub_date=time)
         self.assertIs(recent_question.was_published_recently(), True)
 
+# Utilitary for question creation
 def create_question(question_text, days):
     """
     Create a question with the given question_text 
@@ -33,6 +35,7 @@ def create_question(question_text, days):
     time = timezone.now() + datetime.timedelta(days=days)
     return Question.objects.create(question_text=question_text, pub_date=time)
 
+# Testing index view
 class QuestionIndexViewTests(TestCase):
     def test_no_question(self):
         # If no question exist, an appropriate message is displayed
@@ -74,4 +77,19 @@ class QuestionIndexViewTests(TestCase):
             response.context["latest_question_list"],
             [past_question_1, past_question_2],
         )
-        
+  
+# Testing detail view
+class QuestionDetailViewTests(TestCase):
+  def test_future_question(self):
+      # Returns a 404 on future questions
+      future_question = create_question("Future question", 2)
+      response = self.client.get(reverse("polls:detail", args=(future_question.id,)))
+      self.assertEqual(response.status_code, 404)
+  
+  def test_past_question(self):
+      # Displays the detail page for a past question, containing its question_text
+      past_question_text = "Past question"
+      past_question = create_question(past_question_text, -2)
+      response = self.client.get(reverse("polls:detail", args=(past_question.id,)))
+      self.assertEqual(response.status_code, 200)
+      self.assertContains(response, past_question_text)
